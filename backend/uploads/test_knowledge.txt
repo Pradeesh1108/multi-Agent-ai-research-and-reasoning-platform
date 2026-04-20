@@ -1,0 +1,10 @@
+Retrieval-Augmented Generation (RAG) is an AI framework that enhances large language models by retrieving relevant information from external knowledge sources before generating responses. RAG was introduced by Facebook AI Research (now Meta AI) in 2020.
+
+The RAG pipeline consists of three main stages:
+1. Indexing: Documents are split into chunks, converted to embeddings, and stored in a vector database.
+2. Retrieval: When a query arrives, it is embedded and the most similar document chunks are retrieved using similarity search.
+3. Generation: The retrieved chunks are provided as context to the LLM, which generates a grounded, accurate response.
+
+Key advantages of RAG include: reduced hallucinations, access to up-to-date information, domain-specific knowledge without fine-tuning, and transparent source attribution. Popular vector databases for RAG include FAISS, Pinecone, Chroma, and Weaviate. Common embedding models include OpenAI's text-embedding-ada-002 and open-source alternatives like sentence-transformers/all-MiniLM-L6-v2.
+
+RAG is widely used in enterprise applications such as customer support chatbots, legal document analysis, medical Q&A systems, and internal knowledge management platforms.
