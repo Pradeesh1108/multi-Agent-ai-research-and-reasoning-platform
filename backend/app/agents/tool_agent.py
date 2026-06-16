@@ -26,7 +26,7 @@ Available tools:
 
 Rules:
 - Select 1–3 tools that are most relevant.
-- If the query is factual or about current events, use web_search.
+- ONLY use web_search if the query specifically requires current events, external news, or facts you don't know. Do NOT use it if the answer is in the documents or can be computed.
 - If the query relates to uploaded documents, use knowledge_retrieval.
 - If the query requires computation, use code_execution.
 - Return ONLY valid JSON.
@@ -46,9 +46,6 @@ _USER_PROMPT = """\
 
 ## Execution Plan
 {plan}
-
-## Research Context
-{research_context}
 
 Decide which tools to use and what inputs to provide.
 """
@@ -91,7 +88,6 @@ class ToolAgent(BaseAgent):
         """
         query: str = input_data["query"]
         plan: Plan = input_data["plan"]
-        research_context: str = input_data.get("research_context", "")
 
         plan_text = "\n".join(
             f"{s.step_number}. {s.description}" for s in plan.steps
@@ -101,7 +97,6 @@ class ToolAgent(BaseAgent):
             _USER_PROMPT,
             query=query,
             plan=plan_text,
-            research_context=research_context[:2000],
         )
 
         raw = await self._call_llm(_SYSTEM_PROMPT, user_prompt)

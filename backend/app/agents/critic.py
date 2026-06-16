@@ -28,6 +28,7 @@ Rules:
 - Be strict and objective.
 - Identify specific issues with exact quotes when possible.
 - Provide actionable improvement suggestions.
+- CRITICAL: When evaluating 'Accuracy', you MUST treat the information provided in the 'Research Context' and 'Tool Outputs' as absolute ground truth. Do NOT reject claims just because they contradict your pre-trained internal knowledge, as your internal knowledge may be outdated (e.g., current stock prices, recent news).
 - Compute an overall score (average of all dimensions).
 - Return ONLY valid JSON.
 

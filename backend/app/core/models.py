@@ -52,6 +52,14 @@ class HealthResponse(BaseModel):
 # ── Inter-Agent Data Models ──────────────────────────────────────────────────
 
 
+class RouterResult(BaseModel):
+    """Output from the Router Agent determining the pipeline path."""
+    route: str = Field(..., description="'direct' or 'complex'")
+    direct_answer: str = ""
+    needs_research: bool = True
+    needs_tools: bool = True
+
+
 class PlanStep(BaseModel):
     """A single step in the plan produced by the Planner Agent."""
     step_number: int
@@ -120,6 +128,7 @@ class PipelineState(BaseModel):
     """Full state of the agent pipeline at any point in execution."""
     query: str
     conversation_context: str = ""
+    router_result: Optional[RouterResult] = None
     plan: Optional[Plan] = None
     research: Optional[ResearchResult] = None
     tool_output: Optional[ToolResult] = None

@@ -20,6 +20,7 @@ from app.agents.critic import CriticAgent
 from app.agents.planner import PlannerAgent
 from app.agents.reasoning import ReasoningAgent
 from app.agents.research import ResearchAgent
+from app.agents.router import RouterAgent
 from app.agents.synthesizer import SynthesizerAgent
 from app.agents.tool_agent import ToolAgent
 from app.api.routes import configure_routes, router
@@ -76,7 +77,6 @@ async def lifespan(app: FastAPI):
     llm = ChatGroq(
         model=settings.groq_model,
         temperature=settings.llm_temperature,
-        max_tokens=settings.llm_max_tokens,
         api_key=settings.groq_api_key,
     )
 
@@ -100,7 +100,7 @@ async def lifespan(app: FastAPI):
     Path(settings.upload_dir).mkdir(parents=True, exist_ok=True)
 
     # ── Tools ────────────────────────────────────────────────────────
-    web_search = WebSearchTool(max_results=3)
+    web_search = WebSearchTool(api_key=settings.tavily_api_key, max_results=3)
     knowledge_tool = KnowledgeTool(vector_store=vector_store, top_k=settings.rag_top_k)
     code_executor = CodeExecutionTool(timeout=settings.code_exec_timeout)
 
@@ -120,6 +120,7 @@ async def lifespan(app: FastAPI):
     reasoner = ReasoningAgent(llm, settings)
     critic = CriticAgent(llm, settings, threshold=settings.critic_threshold)
     synthesizer = SynthesizerAgent(llm, settings)
+    router = RouterAgent(llm, settings)
 
     # ── Orchestrator ─────────────────────────────────────────────────
     orchestrator = Orchestrator(
@@ -129,6 +130,7 @@ async def lifespan(app: FastAPI):
         reasoner=reasoner,
         critic=critic,
         synthesizer=synthesizer,
+        router=router,
         memory=memory,
         cache=cache,
         settings=settings,

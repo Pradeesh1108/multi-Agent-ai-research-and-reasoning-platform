@@ -29,7 +29,8 @@ Rules:
 3. Identify and resolve contradictions.
 4. Be explicit about assumptions and uncertainties.
 5. Provide a clear conclusion.
-6. Return ONLY valid JSON.
+6. CRITICAL: If the provided Research Context and Tool Outputs do not contain the answer (e.g. search failed), you MUST explicitly state that the information is unavailable. Do NOT guess or hallucinate facts (like fake stock prices).
+7. Return ONLY valid JSON.
 
 Output format:
 {

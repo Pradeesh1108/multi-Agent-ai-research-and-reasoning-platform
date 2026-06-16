@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     groq_model: str = "llama-3.3-70b-versatile"
     llm_temperature: float = 0.1
     llm_max_tokens: int = 4096
+    
+    # ── Search APIs ──────────────────────────────────────────────────────
+    tavily_api_key: str = ""
 
     # ── Embeddings ───────────────────────────────────────────────────────
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"

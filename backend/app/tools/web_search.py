@@ -11,7 +11,9 @@ import asyncio
 import logging
 from typing import Any
 
-from duckduckgo_search import DDGS
+import json
+import urllib.request
+import urllib.error
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +26,8 @@ class WebSearchTool:
         timeout: Maximum seconds to wait for a search response.
     """
 
-    def __init__(self, max_results: int = 3, timeout: int = 10) -> None:
+    def __init__(self, api_key: str, max_results: int = 3, timeout: int = 10) -> None:
+        self._api_key = api_key
         self._max_results = max_results
         self._timeout = timeout
 
@@ -54,16 +57,37 @@ class WebSearchTool:
     # ── Internal ─────────────────────────────────────────────────────────
 
     def _sync_search(self, query: str) -> list[dict[str, str]]:
-        """Synchronous DuckDuckGo search (runs in a thread)."""
-        with DDGS() as ddgs:
-            raw_results = ddgs.text(query, max_results=self._max_results)
+        """Synchronous Tavily search (runs in a thread)."""
+        if not self._api_key:
+            return [{"title": "API Error", "url": "", "snippet": "Tavily API key is missing."}]
+            
+        url = "https://api.tavily.com/search"
+        data = {
+            "api_key": self._api_key,
+            "query": query,
+            "search_depth": "basic",
+            "include_answer": False,
+            "max_results": self._max_results,
+        }
+        
+        req = urllib.request.Request(
+            url, 
+            data=json.dumps(data).encode("utf-8"), 
+            headers={"Content-Type": "application/json"}
+        )
+        
+        try:
+            with urllib.request.urlopen(req) as response:
+                result = json.loads(response.read().decode("utf-8"))
+        except urllib.error.URLError as exc:
+             raise RuntimeError(f"Tavily API error: {exc}")
 
         formatted: list[dict[str, str]] = []
-        for r in raw_results:
+        for r in result.get("results", []):
             formatted.append({
                 "title": r.get("title", ""),
-                "url": r.get("href", r.get("link", "")),
-                "snippet": r.get("body", r.get("snippet", "")),
+                "url": r.get("url", ""),
+                "snippet": r.get("content", ""),
             })
         return formatted
 

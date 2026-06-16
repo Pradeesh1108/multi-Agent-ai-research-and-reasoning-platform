@@ -20,6 +20,7 @@ from app.agents.critic import CriticAgent
 from app.agents.planner import PlannerAgent
 from app.agents.reasoning import ReasoningAgent
 from app.agents.research import ResearchAgent
+from app.agents.router import RouterAgent
 from app.agents.synthesizer import SynthesizerAgent
 from app.agents.tool_agent import ToolAgent
 from app.config.settings import Settings
@@ -31,6 +32,7 @@ from app.core.models import (
     QueryResponse,
     ReasoningOutput,
     ResearchResult,
+    RouterResult,
     SynthesizedAnswer,
     ToolResult,
 )
@@ -49,6 +51,7 @@ class Orchestrator:
         reasoner: ReasoningAgent instance.
         critic: CriticAgent instance.
         synthesizer: SynthesizerAgent instance.
+        router: RouterAgent instance.
         memory: Shared ConversationMemory.
         cache: Shared QueryCache.
         settings: Application settings.
@@ -62,6 +65,7 @@ class Orchestrator:
         reasoner: ReasoningAgent,
         critic: CriticAgent,
         synthesizer: SynthesizerAgent,
+        router: RouterAgent,
         memory: ConversationMemory,
         cache: QueryCache,
         settings: Settings,
@@ -72,6 +76,7 @@ class Orchestrator:
         self._reasoner = reasoner
         self._critic = critic
         self._synthesizer = synthesizer
+        self._router = router
         self._memory = memory
         self._cache = cache
         self._settings = settings
@@ -100,7 +105,35 @@ class Orchestrator:
         # ── 2. Get conversation context ──────────────────────────────────
         context = await self._memory.get_context()
 
-        # ── 3. Planner ──────────────────────────────────────────────────
+        # ── 3. Router ───────────────────────────────────────────────────
+        router_result: RouterResult = await self._run_agent(
+            "Router",
+            self._router,
+            {"query": query, "context": context},
+            key="router_result",
+        )
+        
+        if router_result.route == "direct":
+            logger.info("Router selected 'direct' route. Bypassing full pipeline.")
+            elapsed = round(time.time() - start, 3)
+            response = QueryResponse(
+                query=query,
+                plan="Skipped by Router",
+                research_context="Skipped by Router",
+                tool_results="Skipped by Router",
+                reasoning="Skipped by Router",
+                critic_feedback="Skipped by Router",
+                answer=router_result.direct_answer,
+                retries_used=0,
+                cached=False,
+                processing_time_seconds=elapsed,
+            )
+            await self._cache.set(query, response)
+            await self._memory.add_interaction(query, response.answer)
+            logger.info("PIPELINE COMPLETE in %.2fs (direct route)", elapsed)
+            return response
+
+        # ── 4. Planner ──────────────────────────────────────────────────
         plan: Plan = await self._run_agent(
             "Planner",
             self._planner,
@@ -111,30 +144,36 @@ class Orchestrator:
             f"{s.step_number}. {s.description}" for s in plan.steps
         )
 
-        # ── 4. Research ─────────────────────────────────────────────────
-        research: ResearchResult = await self._run_agent(
-            "Research",
-            self._researcher,
-            {"query": query, "plan": plan},
-            key="research",
+        # ── 5. Research & Tool (Concurrent) ─────────────────────────────
+        logger.info(
+            "Executing agents conditionally: Research=%s, Tools=%s",
+            router_result.needs_research, router_result.needs_tools
         )
+        
+        async def dummy_research() -> ResearchResult:
+            return ResearchResult(query=query, retrieved_passages=[], source_count=0, summary="Research skipped by Router.")
+
+        async def dummy_tool() -> ToolResult:
+            return ToolResult(tools_used=[], results=[], summary="Tool execution skipped by Router.")
+
+        if router_result.needs_research:
+            research_task = self._run_agent("Research", self._researcher, {"query": query, "plan": plan}, key="research")
+        else:
+            research_task = dummy_research()
+            
+        if router_result.needs_tools:
+            tool_task = self._run_agent("Tool", self._tool_agent, {"query": query, "plan": plan}, key="tool_result")
+        else:
+            tool_task = dummy_tool()
+
+        research, tool_result = await asyncio.gather(research_task, tool_task)
+
         research_text = research.summary
         if research.retrieved_passages:
             research_text += "\n\nPassages:\n" + "\n---\n".join(
                 research.retrieved_passages[:5]
             )
-
-        # ── 5. Tool Agent ───────────────────────────────────────────────
-        tool_result: ToolResult = await self._run_agent(
-            "Tool",
-            self._tool_agent,
-            {
-                "query": query,
-                "plan": plan,
-                "research_context": research_text,
-            },
-            key="tool_result",
-        )
+            
         tool_text = tool_result.summary
 
         # ── 6. Reasoning → Critic loop ──────────────────────────────────
