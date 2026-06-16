@@ -1,10 +1,41 @@
-# Multi-Agent AI Research & Reasoning Platform
+<div align="center">
+  
+# Multi-Agent AI Knowledge & Decision System
 
-A production-ready backend system implementing a multi-agent architecture for
-AI-powered research, reasoning, and knowledge retrieval. Built with FastAPI,
-LangChain, Groq LLM, FAISS vector store, and HuggingFace embeddings.
+A production-ready backend system implementing a sophisticated multi-agent architecture for AI-powered research, reasoning, and knowledge retrieval. 
 
-## Architecture
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![LangChain](https://img.shields.io/badge/LangChain-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)](https://langchain.com/)
+[![Groq](https://img.shields.io/badge/Groq-F55036?style=for-the-badge&logo=groq&logoColor=white)](https://groq.com/)
+[![FAISS](https://img.shields.io/badge/FAISS-Vector_DB-000000?style=for-the-badge)](#)
+[![HuggingFace](https://img.shields.io/badge/HuggingFace-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black)](https://huggingface.co/)
+
+</div>
+
+---
+
+## 📖 Case Study: The Problem & Our Solution
+
+### The Use Case
+As Large Language Models (LLMs) become more integrated into enterprise workflows, two major issues consistently arise: **Hallucinations** and **Superficiality**. Single-prompt LLMs often guess answers when they lack data, fail to verify their own logic, or provide shallow responses to complex, multi-layered questions. 
+
+There is a critical need for an AI system that doesn't just "guess" an answer, but actually **researches, reasons, and verifies** its own work before presenting it to the user.
+
+### What We Do
+This project introduces a **Multi-Agent Architecture** designed to mimic a human research team. Instead of passing a user's query to a single AI, the query is routed through a specialized pipeline of autonomous agents, each with a distinct role. 
+
+Our system:
+1. **Plans** the execution steps required to solve the problem.
+2. **Routes** simple queries to an immediate fast-path, while sending complex queries deep into the research pipeline.
+3. **Researches** internal vector databases (RAG) and **Uses Tools** (live web search, Python code execution) concurrently.
+4. **Reasons** step-by-step through the gathered evidence.
+5. **Critiques** its own reasoning. A dedicated *Critic Agent* acts as a strict quality assurance checker. If the reasoning contains hallucinations or logical flaws, the Critic rejects it and forces the system to try again.
+6. **Synthesizes** the verified data into a highly polished, heavily researched final response.
+
+---
+
+## 🧠 System Architecture
 
 ```mermaid
 graph LR
@@ -22,39 +53,52 @@ graph LR
     D --> D3[Code Executor]
 ```
 
-### Agent Pipeline
-
-| # | Agent | Responsibility |
-|---|-------|---------------|
-| 1 | **Planner** | Decomposes query into structured execution steps |
-| 2 | **Research** | Retrieves relevant passages from FAISS knowledge base |
-| 3 | **Tool** | Selects & invokes tools (web search, RAG, code execution) |
-| 4 | **Reasoning** | Performs chain-of-thought analysis across all gathered data |
-| 5 | **Critic** | Evaluates quality, detects hallucinations, triggers retries |
-| 6 | **Synthesizer** | Produces final polished answer combining all outputs |
-
-### Key Features
-
-- **Retry mechanism**: Critic agent gates output quality; poor answers are re-reasoned up to N times
-- **Query caching**: LRU cache with TTL avoids redundant pipeline executions
-- **Conversation memory**: Sliding-window context shared across agent calls
-- **Safe code execution**: AST-based sandbox blocks dangerous imports/operations
-- **Async throughout**: All agent calls use `async/await` with timeout protection
+### The Agent Team
+| Agent | Responsibility |
+|-------|---------------|
+| 🚦 **Router** | Analyzes query complexity. Bypasses the pipeline for simple questions to reduce latency. |
+| 📋 **Planner** | Decomposes complex queries into structured, logical execution steps. |
+| 📚 **Research** | Retrieves relevant passages from the local FAISS knowledge base (RAG). |
+| 🛠️ **Tool** | Selects & invokes external tools (Tavily Web Search, Code Execution sandbox). |
+| 🧠 **Reasoning** | Performs chain-of-thought analysis across all gathered data. |
+| ⚖️ **Critic** | Evaluates quality, detects hallucinations, and triggers retries if accuracy is lacking. |
+| ✍️ **Synthesizer**| Produces the final polished answer, citing sources and summarizing key points. |
 
 ---
 
-## Quick Start
+## 🛠️ Technology Stack
+
+- **[Python 3.10+](https://python.org)**: Core language programming.
+- **[FastAPI](https://fastapi.tiangolo.com/)**: High-performance asynchronous web framework for serving the REST API.
+- **[LangChain](https://langchain.com/)**: Framework for LLM orchestration and prompt management.
+- **[Groq](https://groq.com/)**: Ultra-fast LPU inference engine powering the LLM agents (using Llama-3 models).
+- **[FAISS (Facebook AI Similarity Search)](https://github.com/facebookresearch/faiss)**: Local vector database for extremely fast semantic retrieval.
+- **[HuggingFace Transformers](https://huggingface.co/)**: Local embedding generation (`all-MiniLM-L6-v2`) for Document RAG.
+- **[Tavily API](https://tavily.com/)**: High-quality, AI-optimized real-time web search integration.
+- **[Uvicorn](https://www.uvicorn.org/)**: Lightning-fast ASGI web server.
+
+---
+
+## 🚀 Key Technical Features
+
+- **Smart Routing & Concurrency**: Reduced latency by running `Research` and `Tool` agents asynchronously (`asyncio.gather`), while the `Router` dynamically skips heavy agents if the query is simple.
+- **Self-Healing Retry Mechanism**: The Critic agent gates output quality. Poor or hallucinated answers are rejected and re-reasoned automatically up to a maximum retry limit.
+- **Query Caching**: LRU cache with TTL completely avoids redundant pipeline executions for duplicate queries.
+- **Conversation Memory**: Sliding-window context is shared across agent calls to maintain multi-turn conversational awareness.
+- **Safe Code Execution**: AST-based sandbox blocks dangerous imports and system operations, allowing the AI to safely compute math or run logic.
+
+---
+
+## ⚡ Quick Start
 
 ### Prerequisites
-
 - Python 3.10+
 - A [Groq API key](https://console.groq.com/) (free tier available)
+- A [Tavily API key](https://tavily.com/) (for web search)
 
 ### 1. Clone & Setup
 
 ```bash
-cd backend
-
 # Create virtual environment
 python -m venv .venv
 source .venv/bin/activate  # macOS/Linux
@@ -66,9 +110,12 @@ pip install -r requirements.txt
 
 ### 2. Configure Environment
 
+Copy `.env.example` to `.env` and fill in your keys:
+
 ```bash
-cp .env.example .env
-# Edit .env and set your GROQ_API_KEY
+GROQ_API_KEY=gsk_your_key_here
+GROQ_MODEL=llama-3.1-8b-instant
+TAVILY_API_KEY=tvly-your_key_here
 ```
 
 ### 3. Run the Server
@@ -76,156 +123,12 @@ cp .env.example .env
 ```bash
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
-
-The first startup will download the HuggingFace embedding model (~90 MB). Subsequent starts are instant.
-
-### 4. Verify
-
-```bash
-curl http://localhost:8000/health
-```
+*Note: The first startup will download the HuggingFace embedding model (~90 MB).*
 
 ---
 
+## 🤝 Contributors
 
-## API Reference
-
-### `POST /query`
-
-Process a user query through the full agent pipeline.
-
-**Request:**
-```json
-{
-  "query": "What are the key differences between transformers and RNNs in NLP?"
-}
-```
-
-**Response:**
-```json
-{
-  "query": "What are the key differences between transformers and RNNs in NLP?",
-  "plan": "Analyze architectures and compare...\n1. Research transformer architecture\n2. Research RNN architecture\n3. Compare strengths and weaknesses\n4. Synthesize findings",
-  "research_context": "Retrieved passages from knowledge base...",
-  "tool_results": "[✓] web_search: 1. **Transformers vs RNNs**...",
-  "reasoning": "After analyzing both architectures, transformers offer superior parallelization...",
-  "critic_feedback": "Score: 8.5/10 – Well-structured comparison with good technical depth.",
-  "answer": "Transformers and RNNs differ fundamentally in how they process sequential data...",
-  "retries_used": 0,
-  "cached": false,
-  "processing_time_seconds": 12.345
-}
-```
-
-### `POST /upload`
-
-Upload a document into the knowledge base.
-
-**Request:** `multipart/form-data` with a file field.
-
-```bash
-curl -X POST http://localhost:8000/upload \
-  -F "file=@research_paper.pdf"
-```
-
-**Response:**
-```json
-{
-  "filename": "research_paper.pdf",
-  "chunks_created": 42,
-  "message": "Successfully ingested 'research_paper.pdf' into the knowledge base (42 chunks)."
-}
-```
-
-### `GET /health`
-
-System health check.
-
-**Response:**
-```json
-{
-  "status": "healthy",
-  "timestamp": "2025-01-15T10:30:00.000000+00:00",
-  "components": {
-    "orchestrator": "ready",
-    "vector_store": "empty",
-    "document_processor": "ready"
-  }
-}
-```
+**[Pradeesh1108](https://github.com/Pradeesh1108)** - *Lead Developer & Architect*
 
 ---
-
-## Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `GROQ_API_KEY` | *(required)* | Your Groq API key |
-| `GROQ_MODEL` | `llama-3.3-70b-versatile` | Groq model identifier |
-| `LLM_TEMPERATURE` | `0.1` | LLM sampling temperature |
-| `LLM_MAX_TOKENS` | `4096` | Maximum tokens per LLM response |
-| `EMBEDDING_MODEL` | `sentence-transformers/all-MiniLM-L6-v2` | HuggingFace embedding model |
-| `MEMORY_SIZE` | `10` | Number of conversation turns to retain |
-| `MAX_RETRIES` | `2` | Max Reasoning→Critic retry cycles |
-| `CRITIC_THRESHOLD` | `7.0` | Minimum critic score to accept (1-10) |
-| `AGENT_TIMEOUT` | `60` | Seconds before an agent call times out |
-| `CACHE_SIZE` | `100` | Max cached query responses |
-| `CACHE_TTL` | `300` | Cache entry lifetime in seconds |
-| `CODE_EXEC_TIMEOUT` | `5` | Max seconds for code execution sandbox |
-| `LOG_LEVEL` | `INFO` | Logging verbosity |
-
----
-
-## Project Structure
-
-```
-backend/
-├── app/
-│   ├── __init__.py
-│   ├── main.py                   # FastAPI app & lifespan startup
-│   ├── api/
-│   │   ├── __init__.py
-│   │   └── routes.py             # /query, /upload, /health endpoints
-│   ├── agents/
-│   │   ├── __init__.py
-│   │   ├── base.py               # Abstract BaseAgent class
-│   │   ├── planner.py            # PlannerAgent
-│   │   ├── research.py           # ResearchAgent (RAG)
-│   │   ├── tool_agent.py         # ToolAgent
-│   │   ├── reasoning.py          # ReasoningAgent
-│   │   ├── critic.py             # CriticAgent
-│   │   └── synthesizer.py        # SynthesizerAgent
-│   ├── tools/
-│   │   ├── __init__.py
-│   │   ├── web_search.py         # DuckDuckGo search
-│   │   ├── knowledge.py          # FAISS retrieval
-│   │   └── code_executor.py      # Safe Python sandbox
-│   ├── rag/
-│   │   ├── __init__.py
-│   │   ├── embeddings.py         # HuggingFace embedding manager
-│   │   ├── vector_store.py       # FAISS vector store manager
-│   │   └── document_processor.py # PDF/text ingestion & chunking
-│   ├── core/
-│   │   ├── __init__.py
-│   │   ├── orchestrator.py       # Pipeline orchestrator
-│   │   ├── cache.py              # LRU query cache with TTL
-│   │   └── models.py             # Pydantic schemas
-│   ├── memory/
-│   │   ├── __init__.py
-│   │   └── conversation.py       # Sliding-window conversation memory
-│   └── config/
-│       ├── __init__.py
-│       └── settings.py           # Environment-based settings
-├── data/
-│   └── faiss_index/              # Persisted vector index (auto-created)
-├── uploads/                      # Uploaded documents (auto-created)
-├── .env.example                  # Environment variable template
-├── requirements.txt
-└── README.md
-```
-
----
-
-## License
-
-MIT
