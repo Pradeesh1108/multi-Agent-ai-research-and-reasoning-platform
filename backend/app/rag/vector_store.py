@@ -32,9 +32,11 @@ class VectorStoreManager:
         self,
         index_path: str,
         embedding_manager: EmbeddingManager,
+        distance_threshold: Optional[float] = None,
     ) -> None:
         self._index_path = Path(index_path)
         self._embedding_manager = embedding_manager
+        self._distance_threshold = distance_threshold
         self._vectorstore: Optional[FAISS] = None
         self._lock = asyncio.Lock()
 
@@ -96,10 +98,21 @@ class VectorStoreManager:
             logger.warning("Vector store is empty – returning no results")
             return []
 
-        results = await asyncio.to_thread(
-            self._vectorstore.similarity_search, query, k=k
-        )
-        logger.debug("Similarity search returned %d results for query", len(results))
+        if self._distance_threshold is not None:
+            results_with_scores = await asyncio.to_thread(
+                self._vectorstore.similarity_search_with_score, query, k=k
+            )
+            results = []
+            for doc, score in results_with_scores:
+                logger.debug("FAISS chunk distance score: %f", score)
+                if score <= self._distance_threshold:
+                    results.append(doc)
+            logger.debug("Similarity search returned %d results for query (filtered from %d)", len(results), len(results_with_scores))
+        else:
+            results = await asyncio.to_thread(
+                self._vectorstore.similarity_search, query, k=k
+            )
+            logger.debug("Similarity search returned %d results for query", len(results))
         return results
 
     def as_retriever(self, search_kwargs: Optional[dict] = None):

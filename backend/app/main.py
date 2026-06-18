@@ -6,7 +6,6 @@ and mounts the API router.
 """
 
 from __future__ import annotations
-
 import logging
 import sys
 from contextlib import asynccontextmanager
@@ -15,6 +14,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from langchain_groq import ChatGroq
+import redis.asyncio as redis_async
 
 from app.agents.critic import CriticAgent
 from app.agents.planner import PlannerAgent
@@ -87,6 +87,7 @@ async def lifespan(app: FastAPI):
     vector_store = VectorStoreManager(
         index_path=settings.faiss_index_path,
         embedding_manager=embedding_mgr,
+        distance_threshold=settings.rag_distance_threshold,
     )
     await vector_store.initialise()
 
@@ -104,8 +105,13 @@ async def lifespan(app: FastAPI):
     knowledge_tool = KnowledgeTool(vector_store=vector_store, top_k=settings.rag_top_k)
     code_executor = CodeExecutionTool(timeout=settings.code_exec_timeout)
 
+    # ── Redis ────────────────────────────────────────────────────────
+    logger.info("Connecting to Redis at %s", settings.redis_url)
+    redis_client = redis_async.from_url(settings.redis_url, decode_responses=True)
+    await redis_client.ping()
+
     # ── Memory & Cache ───────────────────────────────────────────────
-    memory = ConversationMemory(max_size=settings.memory_size)
+    memory = ConversationMemory(redis_client=redis_client, max_size=settings.memory_size, ttl=settings.redis_ttl)
     cache = QueryCache(max_size=settings.cache_size, ttl=settings.cache_ttl)
 
     # ── Agents ───────────────────────────────────────────────────────
@@ -147,6 +153,7 @@ async def lifespan(app: FastAPI):
     logger.info("All components initialised – system is READY")
     yield  # ← application runs here
     logger.info("Shutting down…")
+    await redis_client.close()
 
 
 # ── FastAPI app ──────────────────────────────────────────────────────────────

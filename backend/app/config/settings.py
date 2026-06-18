@@ -41,12 +41,15 @@ class Settings(BaseSettings):
     rag_chunk_size: int = 1000
     rag_chunk_overlap: int = 200
     rag_top_k: int = 5
+    rag_distance_threshold: float = 2.0
 
     # ── Uploads ──────────────────────────────────────────────────────────
     upload_dir: str = str(Path(__file__).resolve().parents[2] / "uploads")
 
     # ── Memory ───────────────────────────────────────────────────────────
     memory_size: int = 10
+    redis_url: str = "redis://localhost:6379"
+    redis_ttl: int = 86400  # 24 hours in seconds
 
     # ── Orchestrator ─────────────────────────────────────────────────────
     max_retries: int = 2

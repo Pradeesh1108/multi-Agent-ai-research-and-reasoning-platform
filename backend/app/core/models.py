@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field
 class QueryRequest(BaseModel):
     """Incoming user query."""
     query: str = Field(..., min_length=1, max_length=5000, description="The user query to process")
+    session_id: str = Field(default="default_session", description="Unique session ID for conversation memory")
 
 
 class QueryResponse(BaseModel):

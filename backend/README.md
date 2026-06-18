@@ -98,14 +98,14 @@ graph LR
 
 ### 1. Clone & Setup
 
-```bash
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate  # macOS/Linux
-# .venv\Scripts\activate   # Windows
+This project uses [uv](https://github.com/astral-sh/uv) for lightning-fast dependency management.
 
-# Install dependencies
-pip install -r requirements.txt
+```bash
+# Install uv if you haven't already
+brew install uv
+
+# Create virtual environment and install dependencies automatically
+uv sync
 ```
 
 ### 2. Configure Environment
@@ -121,7 +121,7 @@ TAVILY_API_KEY=tvly-your_key_here
 ### 3. Run the Server
 
 ```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 *Note: The first startup will download the HuggingFace embedding model (~90 MB).*
 

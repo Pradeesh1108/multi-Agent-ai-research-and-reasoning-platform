@@ -84,7 +84,7 @@ class Orchestrator:
 
     # ── Main entry point ─────────────────────────────────────────────────
 
-    async def process_query(self, query: str) -> QueryResponse:
+    async def process_query(self, query: str, session_id: str) -> QueryResponse:
         """Run the full pipeline for a user query.
 
         Returns a ``QueryResponse`` with all intermediate outputs.
@@ -103,7 +103,7 @@ class Orchestrator:
             return cached
 
         # ── 2. Get conversation context ──────────────────────────────────
-        context = await self._memory.get_context()
+        context = await self._memory.get_context(session_id)
 
         # ── 3. Router ───────────────────────────────────────────────────
         router_result: RouterResult = await self._run_agent(
@@ -129,7 +129,7 @@ class Orchestrator:
                 processing_time_seconds=elapsed,
             )
             await self._cache.set(query, response)
-            await self._memory.add_interaction(query, response.answer)
+            await self._memory.add_interaction(session_id, query, response.answer)
             logger.info("PIPELINE COMPLETE in %.2fs (direct route)", elapsed)
             return response
 
@@ -269,7 +269,7 @@ class Orchestrator:
 
         # ── 9. Store in cache and memory ────────────────────────────────
         await self._cache.set(query, response)
-        await self._memory.add_interaction(query, synthesized.answer)
+        await self._memory.add_interaction(session_id, query, synthesized.answer)
 
         logger.info("PIPELINE COMPLETE in %.2fs (retries=%d)", elapsed, retries)
         return response

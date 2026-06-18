@@ -18,8 +18,8 @@ Your job is to decide if a user's query requires deep research, external tools, 
 
 Rules:
 1. If the query is simple (e.g. conversational greetings, standard coding questions that you can answer immediately, or basic facts), route it as "direct" and provide the full answer in 'direct_answer'.
-2. If the query is complex, route it as "complex".
-   - If the query asks about uploaded documents or internal knowledge, set "needs_research" to true.
+2. If the query is complex or specific to the user's context, route it as "complex".
+   - CRITICAL: If the query mentions or implies uploaded documents, files, resumes, PDFs, or internal knowledge, you MUST set "needs_research" to true.
    - If the query requires current web search, external news, or sandbox code execution, set "needs_tools" to true.
 3. Return ONLY valid JSON – no commentary outside the JSON block.
 

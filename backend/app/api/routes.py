@@ -59,7 +59,7 @@ async def process_query(request: QueryRequest) -> QueryResponse:
 
     logger.info("Received query: %s", request.query[:120])
     try:
-        response = await _orchestrator.process_query(request.query)
+        response = await _orchestrator.process_query(request.query, request.session_id)
         return response
     except RuntimeError as exc:
         logger.error("Pipeline error: %s", exc, exc_info=True)
