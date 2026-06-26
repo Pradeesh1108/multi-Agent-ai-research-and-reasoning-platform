@@ -1,0 +1,4 @@
+
+# Ignore uploads
+backend/uploads/*
+!backend/uploads/.gitkeep
