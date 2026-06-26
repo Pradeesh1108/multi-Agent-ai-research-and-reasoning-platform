@@ -13,6 +13,8 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from langchain_groq import ChatGroq
 import redis.asyncio as redis_async
 
@@ -176,8 +178,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount the router
+# Mount the API router
 app.include_router(router)
+
+# ── Serve frontend ───────────────────────────────────────────────────────────
+
+_FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend"
+
+
+@app.get("/", include_in_schema=False)
+async def serve_frontend():
+    """Serve the frontend index.html at the root URL."""
+    return FileResponse(_FRONTEND_DIR / "index.html")
+
+
+app.mount("/static", StaticFiles(directory=str(_FRONTEND_DIR)), name="static")
 
 
 # ── Uvicorn runner ───────────────────────────────────────────────────────────

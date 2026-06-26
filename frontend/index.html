@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Agent AI Research Platform</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <header>
+        <h1>Multi-Agent AI Research Platform</h1>
+        <p class="subtitle">Powered by a 7-agent pipeline &mdash; Research, Reason, Verify, Respond</p>
+    </header>
+
+    <main>
+        <!-- Query Input -->
+        <section class="query-section">
+            <form id="query-form">
+                <label for="query-input">Ask a question</label>
+                <div class="input-row">
+                    <input
+                        type="text"
+                        id="query-input"
+                        placeholder="e.g. Summarise the uploaded document..."
+                        autocomplete="off"
+                        required
+                    >
+                    <button type="submit" id="submit-btn">Send</button>
+                </div>
+            </form>
+
+            <!-- Upload -->
+            <div class="upload-row">
+                <label for="file-upload" class="upload-label">Upload document (PDF, TXT, MD, CSV):</label>
+                <input type="file" id="file-upload" accept=".pdf,.txt,.md,.csv">
+                <button type="button" id="upload-btn" disabled>Upload</button>
+                <span id="upload-status"></span>
+            </div>
+        </section>
+
+        <!-- Pipeline Steps -->
+        <section id="pipeline-section" class="pipeline-section hidden">
+            <h2>Pipeline Progress</h2>
+            <ol id="pipeline-steps" class="pipeline-steps">
+                <li id="step-router"   class="step"><span class="step-icon"></span> Router &mdash; Classifying query</li>
+                <li id="step-planner"  class="step"><span class="step-icon"></span> Planner &mdash; Decomposing into steps</li>
+                <li id="step-research" class="step"><span class="step-icon"></span> Research &mdash; Searching knowledge base</li>
+                <li id="step-tools"    class="step"><span class="step-icon"></span> Tools &mdash; Web search &amp; code execution</li>
+                <li id="step-reason"   class="step"><span class="step-icon"></span> Reasoning &mdash; Chain-of-thought analysis</li>
+                <li id="step-critic"   class="step"><span class="step-icon"></span> Critic &mdash; Quality &amp; hallucination check</li>
+                <li id="step-synth"    class="step"><span class="step-icon"></span> Synthesizer &mdash; Producing final answer</li>
+            </ol>
+        </section>
+
+        <!-- Results -->
+        <section id="results-section" class="results-section hidden">
+            <h2>Results</h2>
+
+            <div class="result-meta" id="result-meta"></div>
+
+            <details class="result-block">
+                <summary>Plan</summary>
+                <pre id="result-plan"></pre>
+            </details>
+
+            <details class="result-block">
+                <summary>Research Context</summary>
+                <pre id="result-research"></pre>
+            </details>
+
+            <details class="result-block">
+                <summary>Tool Results</summary>
+                <pre id="result-tools"></pre>
+            </details>
+
+            <details class="result-block">
+                <summary>Reasoning</summary>
+                <pre id="result-reasoning"></pre>
+            </details>
+
+            <details class="result-block">
+                <summary>Critic Feedback</summary>
+                <pre id="result-critic"></pre>
+            </details>
+
+            <div class="answer-block">
+                <h3>Final Answer</h3>
+                <div id="result-answer"></div>
+            </div>
+        </section>
+
+        <!-- Error -->
+        <section id="error-section" class="error-section hidden">
+            <p id="error-message"></p>
+        </section>
+    </main>
+
+    <footer>
+        <p>Multi-Agent AI Knowledge &amp; Decision System &bull; Built with FastAPI, LangChain, Groq, FAISS</p>
+    </footer>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
